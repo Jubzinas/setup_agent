@@ -150,16 +150,19 @@ def write_game_instructions(workspace: Path, content: str) -> None:
     out.write_text(content.strip())
     print(f"✅ AGENTS.md written to {out}")
 
-def write_skills_file(workspace: Path, skills: list) -> None:
+def write_skills(workspace: Path, skills: list) -> None:
     if not skills:
         print("⚠️  No skills found, skipping")
         return
-    parts = []
+    skills_dir = workspace / "skills"
+    skills_dir.mkdir(parents=True, exist_ok=True)
     for i, skill_text in enumerate(skills, 1):
-        parts.append(f"\n\n---\n# Skill {i}\n\n{skill_text}")
-    skills_file = workspace / "SKILLS.md"
-    skills_file.write_text("\n".join(parts).strip())
-    print(f"✅ SKILLS.md written to {skills_file} ({len(skills)} skills)")
+        skill_dir = skills_dir / f"skill-{i}"
+        skill_dir.mkdir(parents=True, exist_ok=True)
+        skill_md = skill_dir / "SKILL.md"
+        skill_md.write_text(skill_text.strip())
+        print(f"✅ {skill_md}")
+    print(f"✅ {len(skills)} skill(s) written to {skills_dir}")
 
 def write_soul_md(workspace: Path, agent_input: dict) -> None:
     """Write SOUL.md — the user's system prompt."""
@@ -237,7 +240,7 @@ def setup_openclaw_agent(input_path: str) -> None:
     # Write workspace files
     write_game_instructions(workspace, layers.get("game_instructions", ""))
     write_soul_md(workspace, agent_input)
-    write_skills_file(workspace, layers.get("skills", []))
+    write_skills(workspace, layers.get("skills", []))
 
     # Update openclaw.json
     config = setup_auth(config, agent_input)
