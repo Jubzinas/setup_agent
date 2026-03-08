@@ -162,84 +162,13 @@ def write_skills_file(workspace: Path, skills: list) -> None:
     print(f"✅ SKILLS.md written to {skills_file} ({len(skills)} skills)")
 
 def write_soul_md(workspace: Path, agent_input: dict) -> None:
-    """Write SOUL.md — the agent's complete identity reference.
-    
-    All values are sourced directly from the config schema:
-      - Top-level: agent_id, agent_name, lobby_id, model
-      - credentials: wallet_private_key, agentmail_inbox_id, agentmail_api_key,
-                     telegram_bot_token, telegram_group_chat_id
-      - openclaw_native: wallet_skill, wallet_chain
-      - game_api: base_url, leaderboard_path, game_state_path
-      - prompt_layers: game_instructions, system_prompt
-    """
-    # Top-level fields
-    agent_name = agent_input.get("agent_name", "Agent")
-    agent_id   = agent_input.get("agent_id", "")
-    lobby_id   = agent_input.get("lobby_id", "")
-    model      = agent_input.get("model", "")
-
-    # Credentials
-    credentials      = agent_input.get("credentials", {})
-    wallet_key       = credentials.get("wallet_private_key", "")
-    agentmail_inbox  = credentials.get("agentmail_inbox_id", "")
-    agentmail_key    = credentials.get("agentmail_api_key", "")
-    telegram_token   = credentials.get("telegram_bot_token", "")
-    telegram_chat_id = credentials.get("telegram_group_chat_id", "")
-    openrouter_key   = credentials.get("openrouter_api_key", "")
-
-    # OpenClaw native
-    openclaw_native = agent_input.get("openclaw_native", {})
-    wallet_skill    = openclaw_native.get("wallet_skill", "agent-wallet-usdc")
-    wallet_chain    = openclaw_native.get("wallet_chain", "base")
-
-    # Game API
-    game_api        = agent_input.get("game_api", {})
-    base_url        = game_api.get("base_url", "")
-    leaderboard_url = base_url + game_api.get("leaderboard_path", "")
-    game_state_url  = base_url + game_api.get("game_state_path", "")
-
-    # Prompt layers
-    layers        = agent_input.get("prompt_layers", {})
-    game_instr    = layers.get("game_instructions", "")
-    system_prompt = layers.get("system_prompt", "")
-
-    content = f"""# {agent_name}
-
-## Identity
-- Agent Name          : {agent_name}
-- Agent ID            : {agent_id}
-- Lobby ID            : {lobby_id}
-- Model               : {model}
-- Agent Email         : {agentmail_inbox}
-- Telegram Group Chat : {telegram_chat_id}
-
-## Credentials
-- AgentMail Inbox     : {agentmail_inbox}
-- AgentMail API Key   : {agentmail_key}
-- Telegram Bot Token  : {telegram_token}
-- OpenRouter API Key  : {openrouter_key}
-
-## Wallet
-- Chain               : {wallet_chain}
-- Skill               : {wallet_skill}
-- Private Key         : {wallet_key}
-
-## Game API
-- Leaderboard URL     : {leaderboard_url}
-- Game State URL      : {game_state_url}
-
----
-
-## Game Instructions (Server-Controlled — Highest Priority)
-{game_instr}
-
----
-
-## System Prompt (User-Defined)
-{system_prompt}
-"""
+    """Write SOUL.md — the user's system prompt."""
+    system_prompt = agent_input.get("prompt_layers", {}).get("system_prompt", "")
+    if not system_prompt:
+        print("⚠️  No system_prompt found, skipping SOUL.md")
+        return
     soul_md = workspace / "SOUL.md"
-    soul_md.write_text(content.strip())
+    soul_md.write_text(system_prompt.strip())
     print(f"✅ SOUL.md written to {soul_md}")
 
 def setup_agent(config: dict, agent_input: dict, workspace: Path) -> dict:
