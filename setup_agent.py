@@ -79,7 +79,7 @@ def setup_auth(config: dict, agent_input: dict) -> dict:
 
     wallet_key = credentials.get("wallet_private_key")
     if wallet_key:
-        profiles["wallet:default"] = {"provider": "wallet", "mode": "private_key"}
+        profiles["wallet:default"] = {"provider": "wallet", "mode": "token"}
         cred_profiles["wallet:default"] = {
             "type": "private_key", "provider": "wallet", "key": wallet_key
         }
