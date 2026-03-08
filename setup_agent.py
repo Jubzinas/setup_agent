@@ -273,11 +273,22 @@ def install_wallet_skill_npm_deps(skill_dir: Path | None) -> None:
 
 
 def restart_gateway() -> None:
-    print("\n🔄 Restarting gateway...")
-    subprocess.run(["openclaw", "doctor", "--fix"], check=False)
-    subprocess.run(["openclaw", "gateway", "install"], check=False)
-    subprocess.run(["openclaw", "gateway", "start"],   check=False)
-    print("✅ Gateway restarted!")
+    print("\n🔄 Starting gateway in background...")
+    log_dir = Path.home() / ".openclaw" / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_file = log_dir / "gateway.log"
+    # Run gateway in foreground (as OpenClaw recommends when systemd unavailable),
+    # but under nohup so it survives script exit
+    subprocess.run(
+        ["nohup", "openclaw", "gateway", ">>", str(log_file), "2>&1", "&"],
+        shell=True,
+        cwd=Path.home(),
+        check=False,
+    )
+    # Brief pause so the process can bind before we exit
+    import time
+    time.sleep(2)
+    print("✅ Gateway started in background (logs: {})".format(log_file))
 
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
