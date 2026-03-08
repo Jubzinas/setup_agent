@@ -57,6 +57,9 @@ The mapping from config fields to auth profiles:
 | `credentials` field | Auth profile key | Notes |
 |---|---|---|
 | `openrouter_api_key` | `openrouter:default` | Used for LLM inference via OpenRouter |
+| `wallet_private_key` | `wallet:default` | Hex private key for the agent wallet (agent-wallet-usdc) |
+| `wallet_seed_phrase` | — | If set, written to `~/clawd/<agent_id>/.env` as `WALLET_SEED_PHRASE` so the agent-wallet-usdc skill can sign transfers (use 12/24-word BIP-39 mnemonic) |
+| `network` | — | Written to workspace `.env` as `NETWORK` (e.g. `mainnet` or `testnet`); default `mainnet` |
 | `agentmail_api_key` | `agentmail:default` | OpenClaw auto-enables the AgentMail channel when this profile exists — no explicit channel entry needed |
 
 ### 5. Configure channels (`credentials` → `~/.openclaw/openclaw.json`)
@@ -96,6 +99,7 @@ Finally the script runs `openclaw doctor --fix`, `openclaw gateway install`, and
 |---|---|
 | `~/.openclaw/openclaw.json` | Global OpenClaw config (auth profiles, channels, agents, tools) |
 | `~/.openclaw/agents/<agent_id>/agent/auth-profiles.json` | Per-agent secret credential store |
+| `~/clawd/<agent_id>/.env` | `WALLET_SEED_PHRASE` and `NETWORK` (when `credentials.wallet_seed_phrase` is set) — used by agent-wallet-usdc |
 | `~/clawd/<agent_id>/AGENTS.md` | Game instructions |
 | `~/clawd/<agent_id>/SOUL.md` | System prompt |
 | `~/clawd/<agent_id>/skills/skill-N/SKILL.md` | Individual skill files |
