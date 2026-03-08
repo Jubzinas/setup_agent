@@ -8,6 +8,10 @@ CONFIG_PATH = Path.home() / ".openclaw" / "openclaw.json"
 # ─── OpenClaw config helpers ──────────────────────────────────────────────────
 
 def load_openclaw_config():
+    if not CONFIG_PATH.exists():
+        CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        print(f"📝 No existing config found — starting fresh ({CONFIG_PATH})")
+        return {}
     with open(CONFIG_PATH, "r") as f:
         config = json.load(f)
     # Remove any stale invalid channel keys from previous runs
@@ -172,7 +176,7 @@ def setup_agent(config: dict, agent_input: dict, workspace: Path) -> dict:
     new_agent = {
         "id":        agent_id,
         "name":      agent_name,
-        "model":     {"primary": model, "authProfile": "openrouter:default"},
+        "model":     model,
         "workspace": str(workspace),
         "skills": [
             openclaw_native.get("wallet_skill", "agent-wallet-usdc")
@@ -197,6 +201,11 @@ def setup_tools(config: dict) -> dict:
             "fetch":  {"enabled": True}
         }
     }
+    return config
+
+def setup_gateway(config: dict) -> dict:
+    gw = config.setdefault("gateway", {})
+    gw.setdefault("mode", "local")
     return config
 
 def restart_gateway() -> None:
@@ -229,6 +238,7 @@ def setup_openclaw_agent(input_path: str) -> None:
     config = setup_channels(config, agent_input)
     config = setup_agent(config, agent_input, workspace)
     config = setup_tools(config)
+    config = setup_gateway(config)
 
     save_openclaw_config(config)
     restart_gateway()

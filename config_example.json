@@ -11,7 +11,7 @@
       ]
     },
     "credentials": {
-      "openrouter_api_key": "sk-or-v1-fake-subkey-for-testing",
+      "openrouter_api_key": "fakefake",
       "wallet_private_key": "32432432432432",
       "telegram_bot_token": "8614939144:AAHwBB6TaE2Vv3mxpCRf8Qdok_7YSbDn9tA",
       "telegram_group_chat_id": "-1003657104635",
