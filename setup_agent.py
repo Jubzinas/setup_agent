@@ -146,9 +146,9 @@ def write_game_instructions(workspace: Path, content: str) -> None:
     if not content:
         print("⚠️  No game_instructions found, skipping")
         return
-    out = workspace / "GAME_INSTRUCTIONS.md"
+    out = workspace / "AGENTS.md"
     out.write_text(content.strip())
-    print(f"✅ GAME_INSTRUCTIONS.md written to {out}")
+    print(f"✅ AGENTS.md written to {out}")
 
 def write_skills_file(workspace: Path, skills: list) -> None:
     if not skills:
