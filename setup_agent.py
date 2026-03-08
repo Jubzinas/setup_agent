@@ -26,37 +26,13 @@ def save_openclaw_config(config):
 
 # ─── Agent config loader ──────────────────────────────────────────────────────
 
-def resolve_md_path(value: str, base_dir: Path) -> str:
-    """If value is a path ending in .md, load and return its contents."""
-    if not isinstance(value, str) or not value.strip().endswith(".md"):
-        return value
-    path = Path(value)
-    if not path.is_absolute():
-        path = base_dir / path
-    if path.exists():
-        print(f"✅ Loaded: {path}")
-        return path.read_text()
-    print(f"⚠️  File not found, using raw value: {value}")
-    return value
-
 def load_agent_input(input_path: str) -> dict:
     input_path = Path(input_path).resolve()
-    base_dir   = input_path.parent
 
     with open(input_path, "r") as f:
         data = json.load(f)
 
-    # Resolve prompt_layers fields from .md paths if needed
-    layers = data.setdefault("prompt_layers", {})
-    if "game_instructions" in layers:
-        layers["game_instructions"] = resolve_md_path(layers["game_instructions"], base_dir)
-    if "system_prompt" in layers:
-        layers["system_prompt"] = resolve_md_path(layers["system_prompt"], base_dir)
-    layers["skills"] = [
-        resolve_md_path(skill, base_dir)
-        for skill in layers.get("skills", [])
-    ]
-
+    data.setdefault("prompt_layers", {})
     return data
 
 
@@ -146,100 +122,32 @@ def write_game_instructions(workspace: Path, content: str) -> None:
     if not content:
         print("⚠️  No game_instructions found, skipping")
         return
-    out = workspace / "GAME_INSTRUCTIONS.md"
+    out = workspace / "AGENTS.md"
     out.write_text(content.strip())
-    print(f"✅ GAME_INSTRUCTIONS.md written to {out}")
+    print(f"✅ AGENTS.md written to {out}")
 
-def write_skills_file(workspace: Path, skills: list) -> None:
+def write_skills(workspace: Path, skills: list) -> None:
     if not skills:
         print("⚠️  No skills found, skipping")
         return
-    parts = []
+    skills_dir = workspace / "skills"
+    skills_dir.mkdir(parents=True, exist_ok=True)
     for i, skill_text in enumerate(skills, 1):
-        parts.append(f"\n\n---\n# Skill {i}\n\n{skill_text}")
-    skills_file = workspace / "SKILLS.md"
-    skills_file.write_text("\n".join(parts).strip())
-    print(f"✅ SKILLS.md written to {skills_file} ({len(skills)} skills)")
+        skill_dir = skills_dir / f"skill-{i}"
+        skill_dir.mkdir(parents=True, exist_ok=True)
+        skill_md = skill_dir / "SKILL.md"
+        skill_md.write_text(skill_text.strip())
+        print(f"✅ {skill_md}")
+    print(f"✅ {len(skills)} skill(s) written to {skills_dir}")
 
 def write_soul_md(workspace: Path, agent_input: dict) -> None:
-    """Write SOUL.md — the agent's complete identity reference.
-    
-    All values are sourced directly from the config schema:
-      - Top-level: agent_id, agent_name, lobby_id, model
-      - credentials: wallet_private_key, agentmail_inbox_id, agentmail_api_key,
-                     telegram_bot_token, telegram_group_chat_id
-      - openclaw_native: wallet_skill, wallet_chain
-      - game_api: base_url, leaderboard_path, game_state_path
-      - prompt_layers: game_instructions, system_prompt
-    """
-    # Top-level fields
-    agent_name = agent_input.get("agent_name", "Agent")
-    agent_id   = agent_input.get("agent_id", "")
-    lobby_id   = agent_input.get("lobby_id", "")
-    model      = agent_input.get("model", "")
-
-    # Credentials
-    credentials      = agent_input.get("credentials", {})
-    wallet_key       = credentials.get("wallet_private_key", "")
-    agentmail_inbox  = credentials.get("agentmail_inbox_id", "")
-    agentmail_key    = credentials.get("agentmail_api_key", "")
-    telegram_token   = credentials.get("telegram_bot_token", "")
-    telegram_chat_id = credentials.get("telegram_group_chat_id", "")
-    openrouter_key   = credentials.get("openrouter_api_key", "")
-
-    # OpenClaw native
-    openclaw_native = agent_input.get("openclaw_native", {})
-    wallet_skill    = openclaw_native.get("wallet_skill", "agent-wallet-usdc")
-    wallet_chain    = openclaw_native.get("wallet_chain", "base")
-
-    # Game API
-    game_api        = agent_input.get("game_api", {})
-    base_url        = game_api.get("base_url", "")
-    leaderboard_url = base_url + game_api.get("leaderboard_path", "")
-    game_state_url  = base_url + game_api.get("game_state_path", "")
-
-    # Prompt layers
-    layers        = agent_input.get("prompt_layers", {})
-    game_instr    = layers.get("game_instructions", "")
-    system_prompt = layers.get("system_prompt", "")
-
-    content = f"""# {agent_name}
-
-## Identity
-- Agent Name          : {agent_name}
-- Agent ID            : {agent_id}
-- Lobby ID            : {lobby_id}
-- Model               : {model}
-- Agent Email         : {agentmail_inbox}
-- Telegram Group Chat : {telegram_chat_id}
-
-## Credentials
-- AgentMail Inbox     : {agentmail_inbox}
-- AgentMail API Key   : {agentmail_key}
-- Telegram Bot Token  : {telegram_token}
-- OpenRouter API Key  : {openrouter_key}
-
-## Wallet
-- Chain               : {wallet_chain}
-- Skill               : {wallet_skill}
-- Private Key         : {wallet_key}
-
-## Game API
-- Leaderboard URL     : {leaderboard_url}
-- Game State URL      : {game_state_url}
-
----
-
-## Game Instructions (Server-Controlled — Highest Priority)
-{game_instr}
-
----
-
-## System Prompt (User-Defined)
-{system_prompt}
-"""
+    """Write SOUL.md — the user's system prompt."""
+    system_prompt = agent_input.get("prompt_layers", {}).get("system_prompt", "")
+    if not system_prompt:
+        print("⚠️  No system_prompt found, skipping SOUL.md")
+        return
     soul_md = workspace / "SOUL.md"
-    soul_md.write_text(content.strip())
+    soul_md.write_text(system_prompt.strip())
     print(f"✅ SOUL.md written to {soul_md}")
 
 def setup_agent(config: dict, agent_input: dict, workspace: Path) -> dict:
@@ -308,7 +216,7 @@ def setup_openclaw_agent(input_path: str) -> None:
     # Write workspace files
     write_game_instructions(workspace, layers.get("game_instructions", ""))
     write_soul_md(workspace, agent_input)
-    write_skills_file(workspace, layers.get("skills", []))
+    write_skills(workspace, layers.get("skills", []))
 
     # Update openclaw.json
     config = setup_auth(config, agent_input)
@@ -345,5 +253,7 @@ def setup_openclaw_agent(input_path: str) -> None:
 
 if __name__ == "__main__":
     import sys
-    input_file = sys.argv[1] if len(sys.argv) > 1 else "agent_config.json"
-    setup_openclaw_agent(input_file)
+    if len(sys.argv) != 2:
+        print("Usage: python setup_agent.py <config.json>")
+        sys.exit(1)
+    setup_openclaw_agent(sys.argv[1])
