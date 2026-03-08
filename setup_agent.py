@@ -26,37 +26,13 @@ def save_openclaw_config(config):
 
 # ─── Agent config loader ──────────────────────────────────────────────────────
 
-def resolve_md_path(value: str, base_dir: Path) -> str:
-    """If value is a path ending in .md, load and return its contents."""
-    if not isinstance(value, str) or not value.strip().endswith(".md"):
-        return value
-    path = Path(value)
-    if not path.is_absolute():
-        path = base_dir / path
-    if path.exists():
-        print(f"✅ Loaded: {path}")
-        return path.read_text()
-    print(f"⚠️  File not found, using raw value: {value}")
-    return value
-
 def load_agent_input(input_path: str) -> dict:
     input_path = Path(input_path).resolve()
-    base_dir   = input_path.parent
 
     with open(input_path, "r") as f:
         data = json.load(f)
 
-    # Resolve prompt_layers fields from .md paths if needed
-    layers = data.setdefault("prompt_layers", {})
-    if "game_instructions" in layers:
-        layers["game_instructions"] = resolve_md_path(layers["game_instructions"], base_dir)
-    if "system_prompt" in layers:
-        layers["system_prompt"] = resolve_md_path(layers["system_prompt"], base_dir)
-    layers["skills"] = [
-        resolve_md_path(skill, base_dir)
-        for skill in layers.get("skills", [])
-    ]
-
+    data.setdefault("prompt_layers", {})
     return data
 
 
@@ -277,5 +253,7 @@ def setup_openclaw_agent(input_path: str) -> None:
 
 if __name__ == "__main__":
     import sys
-    input_file = sys.argv[1] if len(sys.argv) > 1 else "agent_config.json"
-    setup_openclaw_agent(input_file)
+    if len(sys.argv) != 2:
+        print("Usage: python setup_agent.py <config.json>")
+        sys.exit(1)
+    setup_openclaw_agent(sys.argv[1])
