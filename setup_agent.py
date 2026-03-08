@@ -73,6 +73,14 @@ def setup_auth(config: dict, agent_input: dict) -> dict:
             "type": "api_key", "provider": "openrouter", "key": openrouter_key
         }
 
+    wallet_key = credentials.get("wallet_private_key")
+    if wallet_key:
+        profiles["wallet:default"] = {"provider": "wallet", "mode": "private_key"}
+        cred_profiles["wallet:default"] = {
+            "type": "private_key", "provider": "wallet", "key": wallet_key
+        }
+        print("✅ Wallet private key configured (for agent-wallet-usdc skill)")
+
     agentmail_key = credentials.get("agentmail_api_key")
     if agentmail_key:
         # AgentMail is configured via auth profile only.
