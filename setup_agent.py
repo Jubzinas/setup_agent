@@ -203,6 +203,11 @@ def setup_tools(config: dict) -> dict:
     }
     return config
 
+def setup_gateway(config: dict) -> dict:
+    gw = config.setdefault("gateway", {})
+    gw.setdefault("mode", "local")
+    return config
+
 def restart_gateway() -> None:
     print("\n🔄 Restarting gateway...")
     subprocess.run(["openclaw", "doctor", "--fix"], check=False)
@@ -233,6 +238,7 @@ def setup_openclaw_agent(input_path: str) -> None:
     config = setup_channels(config, agent_input)
     config = setup_agent(config, agent_input, workspace)
     config = setup_tools(config)
+    config = setup_gateway(config)
 
     save_openclaw_config(config)
     restart_gateway()
