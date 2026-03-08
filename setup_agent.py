@@ -113,11 +113,12 @@ def setup_channels(config: dict, agent_input: dict) -> dict:
             "botToken":    telegram_token,
             "dmPolicy":    "pairing",
             "groupPolicy": "open",
-            "streaming":   "partial"
+            "streaming":   "partial",
         }
         if telegram_chat_id:
-            telegram_cfg["groupPolicy"]    = "allowlist"
-            telegram_cfg["groupAllowFrom"] = [telegram_chat_id]
+            telegram_cfg["groups"] = {
+                str(telegram_chat_id): {"requireMention": False},
+            }
 
         channels["telegram"] = telegram_cfg
         chat_info = f" (group: {telegram_chat_id})" if telegram_chat_id else ""
