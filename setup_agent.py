@@ -150,10 +150,17 @@ def write_soul_md(workspace: Path, agent_input: dict) -> None:
     soul_md.write_text(system_prompt.strip())
     print(f"✅ SOUL.md written to {soul_md}")
 
+def ensure_openrouter_prefix(model: str) -> str:
+    """Ensure model string is prefixed with 'openrouter/' so OpenClaw routes via OpenRouter."""
+    if model.startswith("openrouter/"):
+        return model
+    return f"openrouter/{model}"
+
 def setup_agent(config: dict, agent_input: dict, workspace: Path) -> dict:
     agent_id        = agent_input.get("agent_id", "main")
     agent_name      = agent_input.get("agent_name", "Agent")
-    model           = agent_input.get("model", "anthropic/claude-sonnet-4-6")
+    raw_model       = agent_input.get("model", "anthropic/claude-sonnet-4-6")
+    model           = ensure_openrouter_prefix(raw_model)
     openclaw_native = agent_input.get("openclaw_native", {})
 
     agents     = config.setdefault("agents", {})
@@ -165,16 +172,15 @@ def setup_agent(config: dict, agent_input: dict, workspace: Path) -> dict:
     new_agent = {
         "id":        agent_id,
         "name":      agent_name,
-        "model":     {"primary": model},
+        "model":     {"primary": model, "authProfile": "openrouter:default"},
         "workspace": str(workspace),
-        # skills must be an array — systemPrompt is NOT valid here, it lives in SOUL.md
         "skills": [
             openclaw_native.get("wallet_skill", "agent-wallet-usdc")
         ]
     }
 
     agents["list"].append(new_agent)
-    print(f"✅ Agent '{agent_name}' (id: {agent_id}) configured")
+    print(f"✅ Agent '{agent_name}' (id: {agent_id}) configured with model {model}")
     return config
 
 def setup_tools(config: dict) -> dict:
