@@ -8,6 +8,10 @@ CONFIG_PATH = Path.home() / ".openclaw" / "openclaw.json"
 # ─── OpenClaw config helpers ──────────────────────────────────────────────────
 
 def load_openclaw_config():
+    if not CONFIG_PATH.exists():
+        CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        print(f"📝 No existing config found — starting fresh ({CONFIG_PATH})")
+        return {}
     with open(CONFIG_PATH, "r") as f:
         config = json.load(f)
     # Remove any stale invalid channel keys from previous runs
