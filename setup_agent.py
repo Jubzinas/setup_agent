@@ -1,4 +1,5 @@
 import json
+import shlex
 import subprocess
 from pathlib import Path
 
@@ -238,7 +239,7 @@ def install_wallet_skill() -> None:
     print("\n📦 Installing agent-wallet-usdc skill (for USDC on Base)...")
     # Pipe "y" to stdin to auto-accept VirusTotal/suspicious-skill warning (non-interactive)
     result = subprocess.run(
-        ["npx", "clawhub", "install", "agent-wallet-usdc"],
+        ["npx", "clawhub", "install", "agent-wallet-usdc", "--force"],
         input=b"y\n",
         check=False,
     )
@@ -247,7 +248,7 @@ def install_wallet_skill() -> None:
     else:
         print(
             "⚠️  clawhub install failed — you can try manually: "
-            "npx clawhub install agent-wallet-usdc"
+            "npx clawhub install agent-wallet-usdc --force"
         )
 
 
@@ -278,9 +279,11 @@ def restart_gateway() -> None:
     log_dir.mkdir(parents=True, exist_ok=True)
     log_file = log_dir / "gateway.log"
     # Run gateway in foreground (as OpenClaw recommends when systemd unavailable),
-    # but under nohup so it survives script exit
+    # but under nohup so it survives script exit. Use a single string so the shell
+    # runs the full command; a list with shell=True would run only "nohup".
+    cmd = f"nohup openclaw gateway >> {shlex.quote(str(log_file))} 2>&1 &"
     subprocess.run(
-        ["nohup", "openclaw", "gateway", ">>", str(log_file), "2>&1", "&"],
+        cmd,
         shell=True,
         cwd=Path.home(),
         check=False,
