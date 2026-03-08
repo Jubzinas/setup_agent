@@ -176,7 +176,7 @@ def setup_agent(config: dict, agent_input: dict, workspace: Path) -> dict:
     new_agent = {
         "id":        agent_id,
         "name":      agent_name,
-        "model":     {"primary": model, "authProfile": "openrouter:default"},
+        "model":     model,
         "workspace": str(workspace),
         "skills": [
             openclaw_native.get("wallet_skill", "agent-wallet-usdc")
