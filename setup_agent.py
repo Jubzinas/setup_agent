@@ -197,6 +197,7 @@ def setup_agent(config: dict, agent_input: dict, workspace: Path) -> dict:
 
 def setup_tools(config: dict) -> dict:
     config["tools"] = {
+        "allow": ["agent-wallet-usdc"],
         "elevated": {
             "enabled": True,
             "allowFrom": {
